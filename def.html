@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Document</title>
+</head>
+<body>
+	<script>
+		// 成功df对象(aa)与失败df对象(bb)都由这个构造器生成
+		function a(type){
+			var fired,
+				list = [],
+				i
+			return {
+				done: function(callback){
+					list.push(callback) // 把参数fn一次次推进list
+					if(fired){
+						for (i = 0; i < list.length; i ++) {
+							list[i]()
+						}
+					 	callback()
+					}
+					return this
+				},
+				resolve: function(){
+					fired = true
+					return this
+				}
+			}
+		}
+
+		// 处理结果，再給df来个then方法
+		// a失败 = b成功；a成功 = b失败
+		function c(){
+			var aa = a('success'),
+				bb = a('fail')
+				
+				aa.fail = bb.done
+				aa.reject = bb.resolve
+				
+				return aa
+		}
+
+		// usage
+		// case 1
+		c().done(fn1).done().resolve().done(okFn).fail(ngFn)
+		// c().done(fn1).reject().done(okFn).fail(ngFn)
+
+		function fn1() {
+			new XMLHttpRequest().open('GET', '/xxx').send()
+		}
+
+		function okFn() {
+			alert('success!')
+		}
+
+		function ngFn() {
+			alert('fail!')
+		}
+	</script>
+</body>
+</html>
